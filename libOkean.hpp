@@ -118,3 +118,118 @@ class period_problem{
         }
 };
 
+class substrings_finding{
+    public:
+
+    bool _is_match(string subgroup, string goal){
+        int magic = subgroup.compare(goal);
+        if(magic == 0){
+            return true;
+        };
+        return false;
+    };
+
+    vector<int> search_subtring(string whole, string find_it){
+        int t_whole, t_find_t;
+        t_whole = whole.size(); t_find_t = find_it.size();
+        vector<int> v_indices;
+        //cout << "HEY YEH::" << t_find_t << ", " << t_whole << endl;
+
+        int indice_s = 0;
+        string sub;
+
+        for (int i = 0; i < t_whole; i++){
+            sub = whole.substr(i, t_find_t);
+            //cout << "entrou:: " << sub << endl;
+
+            if(_is_match(sub, find_it)){
+                //cout << "indice:: " << endl;
+                v_indices.push_back(i);
+            }
+        }
+
+        if(v_indices.empty()){
+            return {-1};
+        } else{
+            return v_indices;
+        }
+    };
+
+    void _response_print(vector<int> results){
+        cout << "{";
+
+        for (size_t i = 0; i < results.size(); ++i) {
+            cout << results[i];
+            if (i < results.size() - 1) {
+            cout << ", "; // Adiciona uma vírgula entre os elementos
+            }
+        }
+        cout << "}" << endl;    
+    }
+};    
+
+class string_analysis{
+    public:
+    vector<int> anylizeStrings(string T){   
+        int digit_count = 0;
+        int vowel_count = 0;
+        int consonant_count = 0;
+
+        for(char ch : T){
+            // Verifica se é um dígito
+            if (isdigit(ch)) {
+                digit_count++;
+            }
+            // Verifica se é uma vogal
+            else if (isalpha(ch)) { // Verifica se é uma letra
+                ch = tolower(ch); // Converte para minúscula para facilitar a comparação
+                if (ch == 'a' || ch == 'e' || ch == 'i' || ch == 'o' || ch == 'u') {
+                    vowel_count++;
+                } else {
+                    consonant_count++; // Se não for vogal, é consoante
+                }
+            }
+        }
+        return {digit_count, vowel_count, consonant_count};
+    }
+
+    void _print_results(vector<int> results){
+        cout << "Digitos: " << results[0] << endl;
+        cout << "Vogais: " << results[1] << endl;
+        cout << "Consoantes: " << results[2] << endl;
+    }
+};
+
+class to_tokens{
+    private:
+    vector<string> to_tokens;
+    vector<string> delimiters;
+ 
+    public:
+    vector<string> split(vector<string> whole, vector<string> limit){
+        string sub_str;
+        int size_w = whole.size();
+
+        int start;
+        int end;
+        for (size_t i = 0; i < size_w; i++){
+            start = i;
+            if()
+        }
+        
+
+        return 
+    };
+
+    vector<string> sort(){
+
+    };
+ 
+    vector<vector<string>> _get_data(){
+        return {to_tokens, delimiters};
+    };
+
+    void _print_results(){
+
+    }
+};
