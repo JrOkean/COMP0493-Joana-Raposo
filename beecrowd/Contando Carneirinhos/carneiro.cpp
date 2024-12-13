@@ -1,13 +1,21 @@
 #include <iostream>
-#include <..\libOkean.hpp>
-
+#include <set>
+using namespace std;
+ 
 int main() {
- 
-    /**
-     * Escreva a sua solução aqui
-     * Code your solution here
-     * Escriba su solución aquí
-     */
- 
+    int T, num_lamb, id_lamb;
+    set<int> unique;
+    
+    cin >> T;
+    for(int i = 0; i < T; i++){
+        cin >> num_lamb;
+        for(int l = 0; l < num_lamb; l++){
+            cin >> id_lamb;
+            unique.insert(id_lamb);
+        };
+        cout << unique.size() << endl;
+        unique.clear();
+    };
+    
     return 0;
 }

@@ -34,7 +34,9 @@ int main() {
     s._print_results(plot);
 
     //#4 tokens
-    
+    string str = "I love,and,donuts bullshit";
+    vector<string> test = to._get_tokens(str);
+    //to._print_results(test);
 
     //cout << number << endl;
     cout << "FINISHED ###" << endl;

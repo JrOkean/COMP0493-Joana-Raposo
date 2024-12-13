@@ -200,36 +200,44 @@ class string_analysis{
     }
 };
 
-class to_tokens{
+class to_tokens {
     private:
-    vector<string> to_tokens;
-    vector<string> delimiters;
- 
-    public:
-    vector<string> split(vector<string> whole, vector<string> limit){
-        string sub_str;
-        int size_w = whole.size();
+        vector<string> tokens;
+        char delim[2] = {' ', ','};
+        int delim_count = 2;
+        vector<string> sorted_tokens;
+        //string str = "I love,and,donuts bullshit";
 
-        int start;
-        int end;
-        for (size_t i = 0; i < size_w; i++){
-            start = i;
-            if()
+    public:
+        vector<string> _get_tokens(string whole) {
+
+            int start = 0;  
+            for (int idx = 0; idx < whole.length(); idx++) {
+                char curr = whole[idx];
+
+                for (int j = 0; j < delim_count; j += 1) {
+                    if (curr == delim[j]) {
+                        string local  = string(whole.data() + start, idx - start);
+                        tokens.push_back(local);
+                        start = idx + 1;
+                        break;
+                    }
+                }
         }
         
+            string local  = string(whole.data() + start, whole.length() - start);
+            tokens.push_back(local);
+                
+            return tokens;
+        };
 
-        return 
-    };
+        void _sort_tokens(){
 
-    vector<string> sort(){
+        };
 
-    };
- 
-    vector<vector<string>> _get_data(){
-        return {to_tokens, delimiters};
-    };
-
-    void _print_results(){
-
-    }
+        void _print_results() {
+            for (const auto& token : tokens) {
+                cout << token << "\n";
+            }
+        };
 };
