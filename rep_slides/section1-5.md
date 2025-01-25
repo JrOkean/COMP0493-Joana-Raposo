@@ -22,5 +22,8 @@ Resolvido em `libOkean`, classe `anylizeStrings`;
 
 ### 4:: Tokenize a string
 
+### 5:: Frequency substring
+
+### 6:: 
 
 _I'm very slow ::turtle emoji::_

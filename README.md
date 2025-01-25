@@ -5,3 +5,5 @@ Repositório para biblioteca pedida pelos docentes na matéria: COMP0493 - Tópi
 - Arquivo `section1-5.md` criado para esclarecimentos das respostas pedidas do Cap. 1, seção 1.5 do livro referência.
 - `/files` criado para armazenar os arquivos para teste. 
 - ~~As resoluções específicas foram deixadas em `main.cpp`, em classes próprias.~~
+- `lib2Okean` possui os algoritmos organizados em sequência com a orientação do professor Calebe deixada no classroom.
+- `\beecrowd` está com alguns códigos que upei das tentativas para os exercícios (não está sendo atualizada corretamente).

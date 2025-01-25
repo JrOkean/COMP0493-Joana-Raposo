@@ -241,3 +241,15 @@ class to_tokens {
             }
         };
 };
+
+class geomtry{
+    private: 
+      struct point{
+        int x, y;
+    };
+
+    public:
+    int dist_two_points(){
+        return 0;
+    };
+}
