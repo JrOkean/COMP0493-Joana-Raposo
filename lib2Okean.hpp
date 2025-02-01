@@ -21,8 +21,7 @@ class inputType{
     //Quando termina por EOF
     void read_until_EOF(){
         int a, b;
-        while (scanf("%d %d", &a, &b) == 2){printf("%d\n", a+b);}
-        
+        while (cin >> a >> b){cout << a+b;}
     }
     //OR
     void read_until_EOF(){
