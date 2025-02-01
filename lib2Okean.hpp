@@ -65,8 +65,23 @@ class inputType{
 class linearSort{
         public:
 
-        void couting_sort(){
-            
+        void couting_sort(vector<int> A, vector<int> B, int k){
+            vector<int> C;
+            for(size_t i = 0; i < k; i++){
+                C.push_back(0);
+            }
+            for (size_t j = 0; j < A.size(); j++){
+                int indice = A[j];
+                C[indice] = C[indice + 1];
+            }
+            for (size_t i = 0; i < k; i++){
+                C[i] = C[i] + C[i-1];
+            }
+            for(int j = A.size(); j > 0; j--){
+                int indice = A[j], indice2 = C[indice];
+                B[indice2] = A[j];
+                C[indice] = C[indice]-1;
+            }
         }
 
         void bucket_sort(){
