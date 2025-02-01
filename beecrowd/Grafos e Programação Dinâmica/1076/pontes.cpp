@@ -1,55 +1,43 @@
 #include <iostream>
 #include <vector>
-#include <queue>
 
 using namespace std;
-
-bool coloration_solve(int Nt, vector<int>* matrix, const string& notas) {
-    vector<int> color(Nt, -1); // -1: não visitado, 0: cor A, 1: cor B
-    queue<int> q;
-
-    for (int i = 0; i < Nt; i++) {
-        if (color[i] == -1) {
-            color[i] = (notas[i] == 'B') ? 1 : 0;
-            q.push(i);
-
-            while (!q.empty()) {
-                int u = q.front();
-                q.pop();
-
-                for (int v : matrix[u]) {
-                    if (color[v] == -1) {
-                        color[v] = 1 - color[u];
-                        q.push(v);
-                    } else if (color[v] == color[u]) {
-                        return false;
-                    }
-                }
-            }
-        }
-    }
-
-    return true; 
-}
 
 int main() {
     int Nt, Mb;
 
     while (cin >> Nt >> Mb) {
-        vector<int> matrix[Nt];
-        string notas;
+        vector<int> adjacency_list[Nt]; // Lista de adjacência para o grafo
+        vector<char> initial_notes(Nt); // Vetor para armazenar as notas iniciais
 
-        cin >> notas;
-
-        for (int i = 0; i < Mb; i++) {
-            int a, b;
-            cin >> a >> b;
-            a--; b--; 
-            matrix[a].push_back(b);
-            matrix[b].push_back(a);
+        // Lê as notas iniciais das torres
+        for (int i = 0; i < Nt; i++) {
+            cin >> initial_notes[i];
         }
 
-        cout << (coloration_solve(Nt, matrix, notas) ? "Y" : "N") << endl;
+        // Lê as pontes (arestas) e constrói o grafo
+        for (int i = 0; i < Mb; i++) {
+            int tower_a, tower_b;
+            cin >> tower_a >> tower_b;
+            tower_a--; tower_b--; // Ajusta para índice 0-based
+            adjacency_list[tower_a].push_back(tower_b);
+            adjacency_list[tower_b].push_back(tower_a);
+        }
+
+        // Conta o número de torres que começam com B
+        int count_B = 0;
+        for (int i = 0; i < Nt; i++) {
+            if (initial_notes[i] == 'B') {
+                count_B++;
+            }
+        }
+
+        // Verifica se é possível ajustar todas as torres para A
+        if (count_B % 2 == 0) {
+            cout << "Y" << endl;
+        } else {
+            cout << "N" << endl;
+        }
     }
 
     return 0;
