@@ -1,9 +1,9 @@
 Repositório para biblioteca pedida pelos docentes na matéria: COMP0493 - Tópicos Esp. em Linguagens de Programação, ofertada no período 2024.2 pela Universidade Federal de Sergipe.
 
 # Para os professores:
-- `libOkean` é o arquivo para **minha** biblioteca, o Okean é apenas um nick pessoal.
-- Arquivo `section1-5.md` criado para esclarecimentos das respostas pedidas do Cap. 1, seção 1.5 do livro referência.
-- `/files` criado para armazenar os arquivos para teste. 
-- ~~As resoluções específicas foram deixadas em `main.cpp`, em classes próprias.~~
-- `lib2Okean` possui os algoritmos organizados em sequência com a orientação do professor Calebe deixada no classroom.
-- `\beecrowd` está com alguns códigos que upei das tentativas para os exercícios (não está sendo atualizada corretamente).
+- `lib2Okean` é o arquivo para **minha** biblioteca, o Okean é apenas um nick pessoal (espero não ter problema).
+- Arquivo `section1-5.md` criado para esclarecimentos das respostas pedidas do Cap. 1, seção 1.5 do livro referência (soluções em `libOkean.hpp`).
+- `\files` criado para armazenar os arquivos que serão usados p/testes.
+- As resoluções específicas (espero) conseguir colocar junto com o executável em `\tests`.
+- `\beecrowd` está com alguns códigos que upei das tentativas para os exercícios.
+- `\extras` mantém as versões anteriores da estrutura que estava montando, salvei por organização.
