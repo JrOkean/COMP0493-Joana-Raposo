@@ -27,7 +27,7 @@ class InputType{
         while (cin >> a >> b){cout << a+b;}
     }
     //OR
-    void read_until_EOF(){
+    void read_until_EOF2(){
         int a, b;
         while (scanf("%d %d", &a, &b) != EOF){printf("%d\n", a+b);}
         
@@ -38,7 +38,7 @@ class InputType{
         while(scanf("%d %d", &a, &b) != EOF) printf("CASO %d: %d\n\n", c++, a+b);
     }
     //Output blank apenas entre
-    void read_and_output_n(){
+    void read_and_output_n2(){
         int a, b, c = 0;
         while(scanf("%d %d", &a, &b) != EOF){
             if( c > 0) printf("\n"); 
@@ -313,7 +313,7 @@ class DivedAconquer{
     }
 };
 
-class GreedyAlg{
+/*class GreedyAlg{
     public:
     //Mochila fracionária 
     struct Item {
@@ -348,7 +348,7 @@ class GreedyAlg{
         return valorTotal;
     }
 
-};
+};*/
 
 class GeometricAlg{
     public:
@@ -424,32 +424,6 @@ class Graphs{
             graph.adjList[v1].push_back(v2);            
         } 
     }
-    void removeVertexe(int v){
-        if(v < 0 || v >= graph.numVertex) return;
-        if (graph.useMatrix){
-            graph.adjMatrix.erase(graph.adjMatrix.begin()+v);
-            for (auto& row : graph.adjMatrix){
-                row.erase(row.begin()+v)
-            } 
-        }
-        if(graph.useList){
-            graph.adjList.erase(graph.adjList.begin()+v);
-            for (auto& neighbors : graph.adjList){
-                neighbors.erase(remove(neighbors.begin(), neighbors.end(),v)),
-                neighbors.end()
-            }
-            for (auto& neighbor : neighborns){
-                if (neighbor > v) neighbor--;
-            }
-        }
-        graph.numVertex--;
-    }
-    bool hasEdgeMatrix(int v1, int v2) const {
-        if (graph.useMatrix && v1 >= 0 && v1 < graph.numVertex && v2 >= 0 && v2 < graph.numVertex) {
-            return graph.adjMatrix[v1][v2] != T();
-        }
-        return false;
-    }
     bool hasEdgeList(int v1, int v2) const {
         if (graph.useList && v1 >= 0 && v1 < graph.numVertex && v2 >= 0 && v2 < graph.numVertex) {
             for (T neighbor : graph.adjList[v1]) {
@@ -492,7 +466,7 @@ class Graphs{
         int n = graph.numVertex;
         vector<bool> visited(n, false);
         queue<int> q;
-        visite[start] = true;
+        visited[start] = true;
         q.push(start);
         while(!q.empty()){
             int u = q.front();
@@ -535,3 +509,31 @@ class Graphs{
         DFS_MatrixRecursive(start, visited);
     }  
 };
+
+/*
+void removeVertex(int v){
+        if(v < 0 || v >= graph.numVertex) return;
+        if (graph.useMatrix){
+            graph.adjMatrix.erase(graph.adjMatrix.begin()+v);
+            for (auto& row : graph.adjMatrix){
+                row.erase(row.begin()+v);
+            } 
+        }
+        if(graph.useList){
+            graph.adjList.erase(graph.adjList.begin()+v);
+            for (auto& neighbors : graph.adjList){
+                neighbors.erase(remove(neighbors.begin(), neighbors.end(),v)),
+                neighbors.end();
+            }
+            for (auto& neighbor : neighbor){
+                if (neighbor > v) neighbor--;
+            }
+        }
+        graph.numVertex--;
+    }
+    bool hasEdgeMatrix(int v1, int v2) const {
+        if (graph.useMatrix && v1 >= 0 && v1 < graph.numVertex && v2 >= 0 && v2 < graph.numVertex) {
+            return graph.adjMatrix[v1][v2] != T();
+        }
+        return false;
+    }*/
