@@ -2,9 +2,10 @@
 #include <vector>
 #include <algorithm>
 #include <cmath>
+#include <queue>
 using namespace std;
 /*Seção 1.4*/
-class inputType{
+class InputType{
     public:
     //Casos na primeira linha::
     void read_first_line(){
@@ -64,7 +65,7 @@ class inputType{
     }
 };
 
-class linearSort{
+class LinearSort{
     //O(n)
     public:
     //faixa limitada, algoritmo estável
@@ -160,7 +161,7 @@ class linearSort{
     }
 };
 
-class divedAconquer{
+class DivedAconquer{
     public:
     //p. calcular exponenciação de um número
     long long binary_exponentiation(long long a, long long n) {
@@ -312,7 +313,7 @@ class divedAconquer{
     }
 };
 
-class greedyAlg{
+class GreedyAlg{
     public:
     //Mochila fracionária 
     struct Item {
@@ -349,11 +350,7 @@ class greedyAlg{
 
 };
 
-class geometricAlg{
-
-};
-
-class graphs{
+class GeometricAlg{
     public:
     struct point{
         int x, y, z;
@@ -361,9 +358,180 @@ class graphs{
         point() : x(0), y(0), z(0) {}
     };
 
-    /*double distanceTo(point a, point b){
-        
-        return
-    }*/
+};
 
+template <typename T>
+class Graphs{
+    private:
+    struct graph{
+        int numVertex;
+        //P. Matriz de adjacência
+        vector<vector<T>> adjMatrix;
+        //graph(int n) : numVertex(n), adjMatrix(n, vector<T>(n, T)), adjList(n) {}
+        //P. Lista de adjacência
+        vector<vector<T>> adjList;
+        bool useMatrix;
+        bool useList;
+        //Construtor de inicialização
+        graph(int n, bool useMatrix = false, bool useList = false) :
+        numVertex(n), useMatrix(useMatrix), useList(useList){
+            if(useMatrix){
+                adjMatrix = vector<vector<T>>(n, vector<T>(n, T())); 
+            } 
+            if (useList){
+                adjList= vector<vector<T>>(n);
+            }   
+        }
+    };
+    graph graph;
+    //declaração para uso dos membros privados
+    void DFS_ListRecursive(int u, vector<bool>& visited) {
+        visited[u] = true;
+        cout << "Visitando: " << u << endl;
+        for (int v : graph.adjList[u]) {
+            if (!visited[v]) {
+                DFS_ListRecursive(v, visited);
+            }
+        }
+    }
+    void DFS_MatrixRecursive(int u, vector<bool>& visited) {
+        visited[u] = true;
+        cout << "Visitando: " << u << endl;
+        for (int v = 0; v < graph.numVertex; v++) {
+            if (graph.adjMatrix[u][v] && !visited[v]) {
+                DFS_MatrixRecursive(v, visited);
+            }
+        }
+    }
+    public: 
+    Graphs(int n, bool useMatrix = false, bool useList = false) :
+    graph(n, useMatrix, useList){}
+    void addUndirectEdge(int v1, int v2, T weight = T(1)){
+        if(graph.useMatrix){
+            graph.adjMatrix[v1][v2] = weight;
+            graph.adjMatrix[v2][v1] = weight;
+        }
+        if(graph.useList){
+            graph.adjList[v1].push_back(v2);
+            graph.adjList[v2].push_back(v1);           
+        } 
+    }
+    void addDirecEdge(int v1, int v2, T weight = T(1)){
+        if(graph.useMatrix){
+            graph.adjMatrix[v1][v2] = weight;
+        }
+        if(graph.useList){
+            graph.adjList[v1].push_back(v2);            
+        } 
+    }
+    void removeVertexe(int v){
+        if(v < 0 || v >= graph.numVertex) return;
+        if (graph.useMatrix){
+            graph.adjMatrix.erase(graph.adjMatrix.begin()+v);
+            for (auto& row : graph.adjMatrix){
+                row.erase(row.begin()+v)
+            } 
+        }
+        if(graph.useList){
+            graph.adjList.erase(graph.adjList.begin()+v);
+            for (auto& neighbors : graph.adjList){
+                neighbors.erase(remove(neighbors.begin(), neighbors.end(),v)),
+                neighbors.end()
+            }
+            for (auto& neighbor : neighborns){
+                if (neighbor > v) neighbor--;
+            }
+        }
+        graph.numVertex--;
+    }
+    bool hasEdgeMatrix(int v1, int v2) const {
+        if (graph.useMatrix && v1 >= 0 && v1 < graph.numVertex && v2 >= 0 && v2 < graph.numVertex) {
+            return graph.adjMatrix[v1][v2] != T();
+        }
+        return false;
+    }
+    bool hasEdgeList(int v1, int v2) const {
+        if (graph.useList && v1 >= 0 && v1 < graph.numVertex && v2 >= 0 && v2 < graph.numVertex) {
+            for (T neighbor : graph.adjList[v1]) {
+                if (neighbor == v2) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return false;
+    }
+    void printAdjacencyMatrix() const {
+        if (graph.useMatrix) {
+            for (int i = 0; i < graph.numVertex; i++) {
+                for (int j = 0; j < graph.numVertex; j++) {
+                    cout << graph.adjMatrix[i][j] << " ";
+                }
+                cout << endl;
+            }
+        } else {
+            cerr << "Erro: Matriz de adjacência não inicializada!" << endl;
+        }
+    }
+    void printAdjacencyList() const {
+        if (graph.useList) {
+            for (int i = 0; i < graph.numVertex; i++) {
+                cout << "Vértice " << i << ": ";
+                for (T neighbor : graph.adjList[i]) {
+                    cout << neighbor << " ";
+                }
+                cout << endl;
+            }
+        } else {
+            cerr << "Erro: Lista de adjacência não inicializada!" << endl;
+        }
+    }
+    //BFS : caminho mais curto, conexidade, componetes conexos, caminho mínimo ou área de influência
+    //quando o grafo for esparso
+    void BFS_list(int start){
+        int n = graph.numVertex;
+        vector<bool> visited(n, false);
+        queue<int> q;
+        visite[start] = true;
+        q.push(start);
+        while(!q.empty()){
+            int u = q.front();
+            q.pop();
+            cout << "Visitando: " << u << endl;
+            for (int v : graph.adjList[u]){
+                if (!visited[v]){
+                    visited[v] = true;
+                    q.push(v);
+                }
+            }
+        }
+    }
+    //quando o grafo for denso
+    void BFS_matrix(int start){
+        int n = graph.numVertex;
+        vector<bool> visited(n, false);
+        queue<int> q;
+        visited[start] = true;
+        q.push(start);
+        while(!q.empty()){
+            int u = q.front();
+            q.pop();
+            cout << "Visitando: " << u << endl;
+            for (int v = 0; v < n; v++){
+                if (graph.adjMatrix[u][v] && !visited[v]){
+                    visited[v] = true;
+                    q.push(v);
+                }
+            }        
+        }
+    }
+    // DFS : conexidade, componentes conexos, ciclos, labirintos ou árvores
+    void DFS_list(int start){
+        vector<bool> visited(graph.numVertex, false);
+        DFS_ListRecursive(start, visited);
+    } 
+    void DFS_Matrix(int start){
+        vector<bool> visited(graph.numVertex, false);
+        DFS_MatrixRecursive(start, visited);
+    }  
 };
