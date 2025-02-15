@@ -3,7 +3,10 @@
 #include <algorithm>
 #include <cmath>
 #include <queue>
+#include <stack>
 using namespace std;
+typedef long long ll;
+//typedef tuple<
 /*Seção 1.4*/
 class InputType{
     public:
@@ -210,7 +213,6 @@ class DivedAconquer{
             i++;
             k++;
         }
-
         // Copia os elementos restantes de R (se houver)
         while (j < n2) {
             array[k] = R[j];
@@ -313,42 +315,10 @@ class DivedAconquer{
     }
 };
 
-/*class GreedyAlg{
+class GreedyAlg{
     public:
-    //Mochila fracionária 
-    struct Item {
-        int peso;
-        int valor;
-    };
-    // Função de comparação para ordenar os itens por razão valor/peso (decrescente)
-    bool compararItens(const Item& a, const Item& b) {
-        double razaoA = (double)a.valor / a.peso;
-        double razaoB = (double)b.valor / b.peso;
-        return razaoA > razaoB; // Ordena em ordem decrescente
-    }
-    // Função para resolver o problema da mochila fracionária
-    double mochilaFracionaria(int capacidade, vector<Item>& itens) {
-        // Ordena os itens pela razão valor/peso (decrescente)
-        sort(itens.begin(), itens.end(), compararItens);
-        double valorTotal = 0.0; // Valor total na mochila
-        int pesoAtual = 0;       // Peso atual na mochila
-        // Percorre os itens ordenados
-        for (const Item& item : itens) {
-            if (pesoAtual + item.peso <= capacidade) {
-                // Se o item cabe inteiro, adiciona à mochila
-                pesoAtual += item.peso;
-                valorTotal += item.valor;
-            } else {
-                // Se o item não cabe inteiro, adiciona uma fração dele
-                int pesoRestante = capacidade - pesoAtual;
-                valorTotal += item.valor * ((double)pesoRestante / item.peso);
-                break; // A mochila está cheia
-            }
-        }
-        return valorTotal;
-    }
 
-};*/
+};
 
 class GeometricAlg{
     public:
@@ -359,17 +329,28 @@ class GeometricAlg{
     };
 
 };
+template <typename T> 
+class GraphMatrix{
+    private:
+    struct graph{
+        
+    }
+
+};
+
+template <typename T> 
+class GraphList{
+    
+};
 
 template <typename T>
 class Graphs{
     private:
     struct graph{
         int numVertex;
-        //P. Matriz de adjacência
         vector<vector<T>> adjMatrix;
-        //graph(int n) : numVertex(n), adjMatrix(n, vector<T>(n, T)), adjList(n) {}
-        //P. Lista de adjacência
         vector<vector<T>> adjList;
+        vector<vector<T>> residual;
         bool useMatrix;
         bool useList;
         //Construtor de inicialização
@@ -377,6 +358,7 @@ class Graphs{
         numVertex(n), useMatrix(useMatrix), useList(useList){
             if(useMatrix){
                 adjMatrix = vector<vector<T>>(n, vector<T>(n, T())); 
+                residual= vector<vector<T>>(n, vector<T>(n, T()));
             } 
             if (useList){
                 adjList= vector<vector<T>>(n);
@@ -507,33 +489,103 @@ class Graphs{
     void DFS_Matrix(int start){
         vector<bool> visited(graph.numVertex, false);
         DFS_MatrixRecursive(start, visited);
-    }  
-};
-
-/*
-void removeVertex(int v){
-        if(v < 0 || v >= graph.numVertex) return;
-        if (graph.useMatrix){
-            graph.adjMatrix.erase(graph.adjMatrix.begin()+v);
-            for (auto& row : graph.adjMatrix){
-                row.erase(row.begin()+v);
-            } 
-        }
-        if(graph.useList){
-            graph.adjList.erase(graph.adjList.begin()+v);
-            for (auto& neighbors : graph.adjList){
-                neighbors.erase(remove(neighbors.begin(), neighbors.end(),v)),
-                neighbors.end();
+    } 
+    //Ford-Fulkerson-fluxo máximo
+    bool findAugmentingPathDFS(int s, int t, vector<int>& parent, vector<vector<T>>& residualGraph) {
+        int n = graph.numVertex;
+        vector<bool> visited(n, false);
+        stack<int> stack;
+        stack.push(s);
+        visited[s] = true;
+        parent[s] = -1;
+        while (!stack.empty()) {
+            int u = stack.top();
+            stack.pop();
+            for (int v = 0; v < n; v++) {
+                if (!visited[v] && residualGraph[u][v] > 0) {
+                    stack.push(v);
+                    parent[v] = u;
+                    visited[v] = true;
+                    if (v == t) {
+                        return true; // Caminho aumentante encontrado
+                    }
+                }
             }
-            for (auto& neighbor : neighbor){
-                if (neighbor > v) neighbor--;
-            }
         }
-        graph.numVertex--;
+        return false; // Não há caminho aumentante
     }
-    bool hasEdgeMatrix(int v1, int v2) const {
-        if (graph.useMatrix && v1 >= 0 && v1 < graph.numVertex && v2 >= 0 && v2 < graph.numVertex) {
-            return graph.adjMatrix[v1][v2] != T();
+    // Método Ford-Fulkerson
+    T EdmondsKarp(int s, int t) {
+        if (!graph.useMatrix) {
+            cerr << "Erro: O método requer a matriz de adjacência!" << endl;
+            return T();
+        }
+        int n = graph.numVertex;
+        graph.residualMatrix = graph.adjMatrix; // Usa o membro residualMatrix
+        vector<int> parent(n);
+        T maxFlow = 0;
+        while (findAugmentingPath(s, t, parent, graph.residualMatrix)) {
+            T pathFlow = numeric_limits<T>::max();
+            for (int v = t; v != s; v = parent[v]) {
+                int u = parent[v];
+                pathFlow = min(pathFlow, graph.residualMatrix[u][v]);
+            }
+            for (int v = t; v != s; v = parent[v]) {
+                int u = parent[v];
+                graph.residualMatrix[u][v] -= pathFlow;
+                graph.residualMatrix[v][u] += pathFlow;
+            }
+            maxFlow += pathFlow;
+        }
+        return maxFlow;
+    }
+    // Método Edmonds-Karp (Ford-Fulkerson com BFS)
+    bool findAugmentingPathBFS(int s, int t, vector<int>& parent, vector<vector<T>>& residualGraph) {
+        int n = graph.numVertex;
+        vector<bool> visited(n, false);
+        queue<int> q;
+        q.push(s);
+        visited[s] = true;
+        parent[s] = -1;
+        while (!q.empty()) {
+            int u = q.front();
+            q.pop();
+            for (int v = 0; v < n; v++) {
+                if (!visited[v] && residualGraph[u][v] > 0) {
+                    q.push(v);
+                    parent[v] = u;
+                    visited[v] = true;
+                    if (v == t) {
+                        return true;
+                    }
+                }
+            }
         }
         return false;
-    }*/
+    }
+    T EdmondsKarp(int s, int t) {
+        if (!graph.useMatrix) {
+            cerr << "Erro: O método requer a matriz de adjacência!" << endl;
+            return T();
+        }
+
+        int n = graph.numVertex;
+        vector<vector<T>> residualGraph = graph.adjMatrix;
+        vector<int> parent(n);
+        T maxFlow = 0;
+        while (findAugmentingPath(s, t, parent, residualGraph)) {
+            T pathFlow = numeric_limits<T>::max();
+            for (int v = t; v != s; v = parent[v]) {
+                int u = parent[v];
+                pathFlow = min(pathFlow, residualGraph[u][v]);
+            }
+            for (int v = t; v != s; v = parent[v]) {
+                int u = parent[v];
+                residualGraph[u][v] -= pathFlow;
+                residualGraph[v][u] += pathFlow;
+            }
+            maxFlow += pathFlow;
+        }
+        return maxFlow;
+    }
+};

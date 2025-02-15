@@ -2,21 +2,23 @@
 #include <lib2Okean.hpp>
 
 int main(){
-    Graphs<int> topology(11, true);
+    Graphs<int> topology(4, true);
     
-    topology.addDirecEdge(10, 1, 10);
-    topology.addDirecEdge(1, 2, 8);
-    topology.addDirecEdge(2, 3, 4);
-    topology.addDirecEdge(3, 2, 4);
-    topology.addDirecEdge(3, 6, 6);
-    topology.addDirecEdge(2, 5, 6);
-    topology.addDirecEdge(5, 6, 2);
-    topology.addDirecEdge(6, 5, 2);
-    topology.addDirecEdge(5, 8, 10);
+    topology.addDirecEdge(0, 1, 10);
+    topology.addDirecEdge(0, 2, 5);
+    topology.addDirecEdge(1, 3, 5);
+    topology.addDirecEdge(2, 3, 10);
+    topology.addDirecEdge(1, 2, 3);
 
     cout << "Matriz:"<< endl;
     topology.printAdjacencyMatrix();
 
+    int maxFlow = topology.FordFulkerson(0, 3);
+    cout << "maxFlow com DFS: " << maxFlow << endl;
 
+    int maxFlow2 = topology.EdmondsKarp(0, 3);
+    cout << "maxFlow com BFS: " << maxFlow2 << endl;
+
+    
     return 0;
 }
