@@ -1,3 +1,4 @@
+// @JrOkean - Joana dos Santos Raposo || 2025
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -315,20 +316,105 @@ class DivedAconquer{
     }
 };
 
+template <typename T>
 class GreedyAlg{
+    private:
+    //Mochila Fracionário
+    struct item{
+        T value;
+        T weight;
+        T ratio;
+        item(T v, T w) : value(v), weight(w), ratio(v/w) {}
+    }
     public:
-
+    //Mochila Fracionárria
+    bool compareItems(const Item &a, const Item &b){
+        return a.ratio > b.ration;
+    }
+    double fracKnapsack(vector<Item> &items, double capacity){
+        sort(items.begin(), items.end(), compareItems);
+        double totalValue = 0.0;
+        for (const auto &item : item){
+            if(capacity == 0){
+                break;
+            } 
+        }
+        if(item.weight <= capacity){
+            totalValue += item.value;
+            capacity - = item.weight;
+        } else{
+            double fraction = capacity /item.weight;
+            totalValue += item.value * fraction;
+            capacity = 0;
+        }
+        return totalValue;
+    }
+    //Problema do troco
+    vector<int> change_problem(int change, vector<int> coins) {
+        vector<int> result;
+        sort(coins.begin(), coins.end(), greater<int>());
+        for (int coin : coins) {
+            while (change >= coin) {
+                result.push_back(coin);
+                change -= coin;
+            }
+        }
+        if (change != 0) {
+            cout << "infinity" << endl;
+        }
+        return result;
+    }
+    //Escalonamento de tarefas
+    int activitySelection(vector<int> &start, vector<int> &end){
+        int ans = 0;
+        priority_queue<pair<int, int>>, vector<pair<int, int>>, greater<pair<int, int>> >> p;
+        for (size_t i = 0; i < start.size(); i++){
+            p.push(make_pair(end[i], start[i]))
+        }
+        int finish = -1
+        while (!p.empty()){
+            pair<int, int> activity = p.top();
+            p.pop();
+            if (activity.second > finish){
+                finish = activity.first;
+                ans++;
+            }
+        }
+    }
+    return ans;
 };
 
+template <typename T>
 class GeometricAlg{
     public:
     struct point{
-        int x, y, z;
-        // Construtor padrão
-        point() : x(0), y(0), z(0) {}
+       struct Point {
+        T x, y;
+        T z = 0; 
+        Point(T x = 0, T y = 0, T z = 0) : x(x), y(y), z(z) {}
     };
+    double distanceBetweenTwo(const Point &p1, const Point &p2) {
+        T dx = p1.x - p2.x;
+        T dy = p1.y - p2.y;
+        T dz = p1.z - p2.z;
+        return sqrt(dx * dx + dy * dy + dz * dz);
+    }
+    double slopeBetweenTwo(const Point &p1, const Point &p2) {
+        if (p1.x == p2.x) {
+            throw invalid_argument("infinity");
+        }
+        return static_cast<double>(p1.y - p2.y) / (p1.x - p2.x);
+    }
+    double distanceToLine(const Point &p, double a, double b, double c) {
+        if (a == 0 && b == 0) {
+            throw invalid_argument("error");
+        }
+        return abs(a * p.x + b * p.y + c) / sqrt(a * a + b * b);
+    }
+};
 
 };
+
 template <typename T> 
 class GraphMatrix{
     private:
