@@ -576,7 +576,10 @@ class Graphs{
         vector<bool> visited(graph.numVertex, false);
         DFS_MatrixRecursive(start, visited);
     } 
-    //Ford-Fulkerson-fluxo máximo
+    
+/* ################# Parte da Segunda Entrega ################# */
+
+//Ford-Fulkerson-fluxo máximo
     bool findAugmentingPathDFS(int s, int t, vector<int>& parent, vector<vector<T>>& residualGraph) {
         int n = graph.numVertex;
         vector<bool> visited(n, false);
@@ -675,5 +678,11 @@ class Graphs{
         return maxFlow;
     }
 };
-////////////////////////////////////////////////// Parte da Segunda Entrega 
 
+class combinatorics{
+
+};
+
+class numeric_theory{
+
+};
