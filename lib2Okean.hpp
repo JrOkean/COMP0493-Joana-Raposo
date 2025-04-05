@@ -5,9 +5,10 @@
 #include <cmath>
 #include <queue>
 #include <stack>
+#include <limits>
+#include <stdexcept>
 using namespace std;
 typedef long long ll;
-//typedef tuple<
 /*Seção 1.4*/
 class InputType{
     public:
@@ -383,15 +384,19 @@ class GreedyAlg{
     }
     return ans;
 };
-
+//Combinatorial&Numerica
 template <typename T>
 class GeometricAlg{
     public:
     struct point{
        struct Point {
-        T x, y;
-        T z = 0; 
+        T x, y,z;
         Point(T x = 0, T y = 0, T z = 0) : x(x), y(y), z(z) {}
+    };
+    struct Segment {
+        Point start;
+        Point end;
+        Segment(const Point& s, const Point& e) : start(s), end(e) {}
     };
     double distanceBetweenTwo(const Point &p1, const Point &p2) {
         T dx = p1.x - p2.x;
@@ -411,278 +416,781 @@ class GeometricAlg{
         }
         return abs(a * p.x + b * p.y + c) / sqrt(a * a + b * b);
     }
-};
-
-};
-
-template <typename T> 
-class GraphMatrix{
-    private:
-    struct graph{
-        
+    bool isPointOnSegment(const Point& A, const Point& B, const Point& P) {
+        // Verifica colinearidade (usando distância do ponto à reta)
+        double distToLine = distanceToLine(P, a, b, c); // Supondo que a reta AB é ax + by + c = 0
+        const double EPSILON = 1e-9;
+        if (distToLine > EPSILON) return false;
+        // Verifica se P está entre A e B (coordenadas paramétricas)
+        T minX = min(A.x, B.x);
+        T maxX = max(A.x, B.x);
+        T minY = min(A.y, B.y);
+        T maxY = max(A.y, B.y);
+        return (P.x >= minX - EPSILON && P.x <= maxX + EPSILON) &&
+            (P.y >= minY - EPSILON && P.y <= maxY + EPSILON);
     }
+    bool areLinesIntersecting(double a1, double b1, double c1, double a2, double b2, double c2) const {
+        const double EPSILON = 1e-9; 
+        if ((abs(a1) < EPSILON && abs(b1) < EPSILON) || 
+            (abs(a2) < EPSILON && abs(b2) < EPSILON)) {
+            throw invalid_argument("Coeficientes 'a' e 'b' não podem ser ambos zero.");
+        }
+        double det = a1 * b2 - a2 * b1;
+        if (abs(det) > EPSILON) {
+            return true;
+        }
+        else {
+            bool coincident = ((a1 * c2 - a2 * c1) < EPSILON) && 
+                            ((b1 * c2 - b2 * c1) < EPSILON);
+            return coincident;
+        }
+    }
+    Point closestPointOnSegment(const Segment& seg, const Point& P) {
+        Point A = seg.start;
+        Point B = seg.end;
+        // Vetor AB e AP
+        Point AB = {B.x - A.x, B.y - A.y, B.z - A.z};
+        Point AP = {P.x - A.x, P.y - A.y, P.z - A.z};
+        // Projeção escalar de AP em AB
+        double t = (AP.x * AB.x + AP.y * AB.y + AP.z * AB.z) / 
+                (AB.x * AB.x + AB.y * AB.y + AB.z * AB.z);
+        // Clamp t entre [0, 1]
+        t = max(0.0, min(1.0, t));
+        // Retorna o ponto projetado
+        return {A.x + t * AB.x, A.y + t * AB.y, A.z + t * AB.z};
+    }
+    Point convexCombination(const vector<Point>& points, const vector<double>& weights) {
+        if (points.size() != weights.size()) {
+            throw invalid_argument("Número de pontos e pesos deve ser igual");
+        }
+        double sumWeights = 0.0;
+        for (double w : weights) {
+            sumWeights += w;
+        }
+        const double EPSILON = 1e-6;
+        if (abs(sumWeights - 1.0) > EPSILON) {
+            throw invalid_argument("Soma dos pesos deve ser 1");
+        }
+        T x = 0, y = 0, z = 0;
+        for (size_t i = 0; i < points.size(); ++i) {
+            x += weights[i] * points[i].x;
+            y += weights[i] * points[i].y;
+            z += weights[i] * points[i].z;
+        }
+        return {x, y, z};
+    }
+    bool areSegmentsIntersecting(const Segment& seg1, const Segment& seg2) {
+        // Coeficientes das retas suporte (ax + by + c = 0)
+        double a1 = seg1.end.y - seg1.start.y;
+        double b1 = seg1.start.x - seg1.end.x;
+        double c1 = seg1.end.x * seg1.start.y - seg1.start.x * seg1.end.y;
+        double a2 = seg2.end.y - seg2.start.y;
+        double b2 = seg2.start.x - seg2.end.x;
+        double c2 = seg2.end.x * seg2.start.y - seg2.start.x * seg2.end.y;
+        // Verifica se as retas suporte se intersectam
+        bool linesIntersect = areLinesIntersecting(a1, b1, c1, a2, b2, c2);
+        if (!linesIntersect) {
+            return false; // Linhas paralelas ou coincidentes sem sobreposição
+        }
+        // Calcula o ponto de interseção (se existir)
+        double det = a1 * b2 - a2 * b1;
+        if (abs(det) > 1e-9) {
+            Point intersection;
+            intersection.x = (b1 * c2 - b2 * c1) / det;
+            intersection.y = (a2 * c1 - a1 * c2) / det;
+            // Verifica se o ponto está dentro dos dois segmentos
+            return isPointOnSegment(seg1.start, seg1.end, intersection) &&
+                isPointOnSegment(seg2.start, seg2.end, intersection);
+        } else {
+            // Linhas coincidentes: verifica se os segmentos se sobrepõem
+            return (isPointOnSegment(seg1.start, seg1.end, seg2.start) ||
+                    isPointOnSegment(seg1.start, seg1.end, seg2.end) ||
+                    isPointOnSegment(seg2.start, seg2.end, seg1.start) ||
+                    isPointOnSegment(seg2.start, seg2.end, seg1.end));
+        }
+    }
+    // Função auxiliar para cálculo da orientação (produto vetorial 2D)
+    static T cross(const Point& O, const Point& A, const Point& B) {
+        return (A.x - O.x) * (B.y - O.y) - (A.y - O.y) * (B.x - O.x);
+    }
+    // Algoritmo de Andrew para envoltória convexa 2D (ignora z)
+    vector<Point> convexHullAndrew(vector<Point>& points) {
+        int n = points.size();
+        if (n <= 1) return points;
 
-};
-
-template <typename T> 
-class GraphList{
-    
+        // Ordena pontos por x (e y em caso de empate)
+        sort(points.begin(), points.end(), [](const Point& a, const Point& b) {
+            return a.x < b.x || (a.x == b.x && a.y < b.y);
+        });
+        vector<Point> hull;
+        // Parte inferior da envoltória
+        for (int i = 0; i < n; ++i) {
+            while (hull.size() >= 2 && cross(hull[hull.size()-2], hull.back(), points[i]) <= 0) {
+                hull.pop_back();
+            }
+            hull.push_back(points[i]);
+        }
+        // Parte superior da envoltória
+        int lower_hull_size = hull.size();
+        for (int i = n-2; i >= 0; --i) {
+            while (hull.size() > lower_hull_size && cross(hull[hull.size()-2], hull.back(), points[i]) <= 0) {
+                hull.pop_back();
+            }
+            hull.push_back(points[i]);
+        }
+        // Remove duplicatas (primeiro e último ponto são iguais)
+        if (hull.size() > 1) hull.pop_back();
+        return hull;
+    }
 };
 
 template <typename T>
-class Graphs{
-    private:
-    struct graph{
-        int numVertex;
-        vector<vector<T>> adjMatrix;
-        vector<vector<T>> adjList;
-        vector<vector<T>> residual;
-        bool useMatrix;
-        bool useList;
-        //Construtor de inicialização
-        graph(int n, bool useMatrix = false, bool useList = false) :
-        numVertex(n), useMatrix(useMatrix), useList(useList){
-            if(useMatrix){
-                adjMatrix = vector<vector<T>>(n, vector<T>(n, T())); 
-                residual= vector<vector<T>>(n, vector<T>(n, T()));
-            } 
-            if (useList){
-                adjList= vector<vector<T>>(n);
-            }   
-        }
+class GraphMatrix {
+private:
+    struct Graph {
+        bool isDirected;
+        int numVertices;
+        vector<vector<T>> adjMatrix; 
     };
-    graph graph;
-    //declaração para uso dos membros privados
-    void DFS_ListRecursive(int u, vector<bool>& visited) {
-        visited[u] = true;
-        cout << "Visitando: " << u << endl;
-        for (int v : graph.adjList[u]) {
-            if (!visited[v]) {
-                DFS_ListRecursive(v, visited);
+    Graph g;
+public:
+    GraphMatrix(int n, bool directed = false) {
+        g.isDirected = directed;
+        g.numVertices = n;
+        g.adjMatrix.resize(n, vector<T>(n, T()));
+    }
+    void addEdge(int u, int v, T weight = T()) {
+        if (u < 0 || u >= g.numVertices || v < 0 || v >= g.numVertices)
+            throw out_of_range("Vértice inválido");
+        g.adjMatrix[u][v] = weight;
+        if (!g.isDirected)
+            g.adjMatrix[v][u] = weight;
+    }
+    void removeEdge(int u, int v) {
+        if (u < 0 || u >= g.numVertices || v < 0 || v >= g.numVertices)
+            throw out_of_range("Vértice inválido");
+        g.adjMatrix[u][v] = T();
+        if (!g.isDirected)
+            g.adjMatrix[v][u] = T();
+    }
+    bool hasEdge(int u, int v) const {
+        if (u < 0 || u >= g.numVertices || v < 0 || v >= g.numVertices)
+            throw out_of_range("Vértice inválido");
+        return g.adjMatrix[u][v] != T();
+    }
+    vector<int> getNeighbors(int u) const {
+        if (u < 0 || u >= g.numVertices)
+            throw out_of_range("Vértice inválido");
+        vector<int> neighbors;
+        for (int v = 0; v < g.numVertices; ++v) {
+            if (g.adjMatrix[u][v] != T())
+                neighbors.push_back(v);
+        }
+        return neighbors;
+    }
+    void printMatrix() const {
+        for (const auto& row : g.adjMatrix) {
+            for (const auto& val : row) {
+                cout << val << " ";
             }
+            cout << "\n";
         }
     }
-    void DFS_MatrixRecursive(int u, vector<bool>& visited) {
-        visited[u] = true;
-        cout << "Visitando: " << u << endl;
-        for (int v = 0; v < graph.numVertex; v++) {
-            if (graph.adjMatrix[u][v] && !visited[v]) {
-                DFS_MatrixRecursive(v, visited);
-            }
-        }
-    }
-    public: 
-    Graphs(int n, bool useMatrix = false, bool useList = false) :
-    graph(n, useMatrix, useList){}
-    void addUndirectEdge(int v1, int v2, T weight = T(1)){
-        if(graph.useMatrix){
-            graph.adjMatrix[v1][v2] = weight;
-            graph.adjMatrix[v2][v1] = weight;
-        }
-        if(graph.useList){
-            graph.adjList[v1].push_back(v2);
-            graph.adjList[v2].push_back(v1);           
-        } 
-    }
-    void addDirecEdge(int v1, int v2, T weight = T(1)){
-        if(graph.useMatrix){
-            graph.adjMatrix[v1][v2] = weight;
-        }
-        if(graph.useList){
-            graph.adjList[v1].push_back(v2);            
-        } 
-    }
-    bool hasEdgeList(int v1, int v2) const {
-        if (graph.useList && v1 >= 0 && v1 < graph.numVertex && v2 >= 0 && v2 < graph.numVertex) {
-            for (T neighbor : graph.adjList[v1]) {
-                if (neighbor == v2) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        return false;
-    }
-    void printAdjacencyMatrix() const {
-        if (graph.useMatrix) {
-            for (int i = 0; i < graph.numVertex; i++) {
-                for (int j = 0; j < graph.numVertex; j++) {
-                    cout << graph.adjMatrix[i][j] << " ";
-                }
-                cout << endl;
-            }
-        } else {
-            cerr << "Erro: Matriz de adjacência não inicializada!" << endl;
-        }
-    }
-    void printAdjacencyList() const {
-        if (graph.useList) {
-            for (int i = 0; i < graph.numVertex; i++) {
-                cout << "Vértice " << i << ": ";
-                for (T neighbor : graph.adjList[i]) {
-                    cout << neighbor << " ";
-                }
-                cout << endl;
-            }
-        } else {
-            cerr << "Erro: Lista de adjacência não inicializada!" << endl;
-        }
-    }
-    //BFS : caminho mais curto, conexidade, componetes conexos, caminho mínimo ou área de influência
-    //quando o grafo for esparso
-    void BFS_list(int start){
-        int n = graph.numVertex;
-        vector<bool> visited(n, false);
-        queue<int> q;
-        visited[start] = true;
-        q.push(start);
-        while(!q.empty()){
-            int u = q.front();
-            q.pop();
-            cout << "Visitando: " << u << endl;
-            for (int v : graph.adjList[u]){
-                if (!visited[v]){
-                    visited[v] = true;
-                    q.push(v);
-                }
-            }
-        }
-    }
-    //quando o grafo for denso
-    void BFS_matrix(int start){
-        int n = graph.numVertex;
-        vector<bool> visited(n, false);
-        queue<int> q;
-        visited[start] = true;
-        q.push(start);
-        while(!q.empty()){
-            int u = q.front();
-            q.pop();
-            cout << "Visitando: " << u << endl;
-            for (int v = 0; v < n; v++){
-                if (graph.adjMatrix[u][v] && !visited[v]){
-                    visited[v] = true;
-                    q.push(v);
-                }
-            }        
-        }
-    }
-    // DFS : conexidade, componentes conexos, ciclos, labirintos ou árvores
-    void DFS_list(int start){
-        vector<bool> visited(graph.numVertex, false);
-        DFS_ListRecursive(start, visited);
-    } 
-    void DFS_Matrix(int start){
-        vector<bool> visited(graph.numVertex, false);
-        DFS_MatrixRecursive(start, visited);
-    } 
-    
-/* ################# Parte da Segunda Entrega ################# */
+    // Outras funções úteis:
+    int getNumVertices() const { return g.numVertices; }
+    bool isDirected() const { return g.isDirected; }
+    // BFS para matriz de adjacência
+    vector<int> BFS(int startVertex) const {
+        if (startVertex < 0 || startVertex >= g.numVertices)
+            throw out_of_range("Vértice inicial inválido");
 
-//Ford-Fulkerson-fluxo máximo
-    bool findAugmentingPathDFS(int s, int t, vector<int>& parent, vector<vector<T>>& residualGraph) {
-        int n = graph.numVertex;
-        vector<bool> visited(n, false);
-        stack<int> stack;
-        stack.push(s);
-        visited[s] = true;
-        parent[s] = -1;
-        while (!stack.empty()) {
-            int u = stack.top();
-            stack.pop();
-            for (int v = 0; v < n; v++) {
-                if (!visited[v] && residualGraph[u][v] > 0) {
-                    stack.push(v);
-                    parent[v] = u;
-                    visited[v] = true;
-                    if (v == t) {
-                        return true; // Caminho aumentante encontrado
-                    }
+        vector<bool> visited(g.numVertices, false);
+        vector<int> traversalOrder;
+        queue<int> q;
+
+        visited[startVertex] = true;
+        q.push(startVertex);
+
+        while (!q.empty()) {
+            int current = q.front();
+            q.pop();
+            traversalOrder.push_back(current);
+            // Percorre todos os vértices para encontrar vizinhos
+            for (int neighbor = 0; neighbor < g.numVertices; ++neighbor) {
+                if (g.adjMatrix[current][neighbor] != T() && !visited[neighbor]) { // Se há aresta
+                    visited[neighbor] = true;
+                    q.push(neighbor);
                 }
             }
         }
-        return false; // Não há caminho aumentante
+        return traversalOrder;
     }
-    // Método Ford-Fulkerson
-    T EdmondsKarp(int s, int t) {
-        if (!graph.useMatrix) {
-            cerr << "Erro: O método requer a matriz de adjacência!" << endl;
-            return T();
-        }
-        int n = graph.numVertex;
-        graph.residualMatrix = graph.adjMatrix; // Usa o membro residualMatrix
-        vector<int> parent(n);
-        T maxFlow = 0;
-        while (findAugmentingPath(s, t, parent, graph.residualMatrix)) {
-            T pathFlow = numeric_limits<T>::max();
-            for (int v = t; v != s; v = parent[v]) {
-                int u = parent[v];
-                pathFlow = min(pathFlow, graph.residualMatrix[u][v]);
+    // DFS Iterativo para matriz de adjacência
+    vector<int> DFS(int startVertex) const {
+        if (startVertex < 0 || startVertex >= g.numVertices)
+            throw out_of_range("Vértice inicial inválido");
+
+        vector<bool> visited(g.numVertices, false);
+        vector<int> traversalOrder;
+        stack<int> s;
+
+        s.push(startVertex);
+        visited[startVertex] = true;
+
+        while (!s.empty()) {
+            int current = s.top();
+            s.pop();
+            traversalOrder.push_back(current);
+            // Empilha os vizinhos em ordem inversa para manter a ordem correta
+            for (int neighbor = g.numVertices - 1; neighbor >= 0; --neighbor) {
+                if (g.adjMatrix[current][neighbor] != T() && !visited[neighbor]) { // Se há aresta
+                    visited[neighbor] = true;
+                    s.push(neighbor);
+                }
             }
-            for (int v = t; v != s; v = parent[v]) {
-                int u = parent[v];
-                graph.residualMatrix[u][v] -= pathFlow;
-                graph.residualMatrix[v][u] += pathFlow;
-            }
-            maxFlow += pathFlow;
         }
-        return maxFlow;
+        return traversalOrder;
     }
-    // Método Edmonds-Karp (Ford-Fulkerson com BFS)
-    bool findAugmentingPathBFS(int s, int t, vector<int>& parent, vector<vector<T>>& residualGraph) {
-        int n = graph.numVertex;
-        vector<bool> visited(n, false);
+    //#######################
+    //####################### SEGUNDA ENTREGA GRAFOS::
+    //#######################
+    private:
+    bool bfsEdmondsKarp(const vector<vector<T>>& residual, int source, int sink, vector<int>& parent) const {
+        fill(parent.begin(), parent.end(), -1);
         queue<int> q;
-        q.push(s);
-        visited[s] = true;
-        parent[s] = -1;
+        q.push(source);
+        parent[source] = -2; 
+
         while (!q.empty()) {
             int u = q.front();
             q.pop();
-            for (int v = 0; v < n; v++) {
-                if (!visited[v] && residualGraph[u][v] > 0) {
-                    q.push(v);
+
+            for (int v = 0; v < g.numVertices; ++v) {
+                if (residual[u][v] > 0 && parent[v] == -1) {
                     parent[v] = u;
-                    visited[v] = true;
-                    if (v == t) {
-                        return true;
-                    }
+                    if (v == sink) return true;
+                    q.push(v);
                 }
             }
         }
         return false;
     }
-    T EdmondsKarp(int s, int t) {
-        if (!graph.useMatrix) {
-            cerr << "Erro: O método requer a matriz de adjacência!" << endl;
-            return T();
-        }
 
-        int n = graph.numVertex;
-        vector<vector<T>> residualGraph = graph.adjMatrix;
-        vector<int> parent(n);
+    bool dfsFordFulkerson(const vector<vector<T>>& residual, int u, int sink, vector<int>& parent) const {
+        if (u == sink) return true;
+        for (int v = 0; v < g.numVertices; ++v) {
+            if (residual[u][v] > 0 && parent[v] == -1) {
+                parent[v] = u;
+                if (dfsFordFulkerson(residual, v, sink, parent)) return true;
+                parent[v] = -1; // Backtrack
+            }
+        }
+        return false;
+    }
+
+    bool bfsLevelGraph(const vector<vector<T>>& residual, int source, int sink, vector<int>& level) const {
+        fill(level.begin(), level.end(), -1);
+        queue<int> q;
+        q.push(source);
+        level[source] = 0;
+
+        while (!q.empty()) {
+            int u = q.front();
+            q.pop();
+
+            for (int v = 0; v < g.numVertices; ++v) {
+                if (residual[u][v] > 0 && level[v] == -1) {
+                    level[v] = level[u] + 1;
+                    q.push(v);
+                }
+            }
+        }
+        return level[sink] != -1;
+    }
+
+    T sendFlow(vector<vector<T>>& residual, int u, int sink, T flow, vector<int>& level) {
+        if (u == sink) return flow;
+
+        for (int v = 0; v < g.numVertices; ++v) {
+            if (residual[u][v] > 0 && level[v] == level[u] + 1) {
+                T currentFlow = min(flow, residual[u][v]);
+                T tempFlow = sendFlow(residual, v, sink, currentFlow, level);
+
+                if (tempFlow > 0) {
+                    residual[u][v] -= tempFlow;
+                    residual[v][u] += tempFlow;
+                    return tempFlow;
+                }
+            }
+        }
+        return 0;
+    }
+    public: 
+    // Algoritmo de Ford-Fulkerson (DFS)
+    T fordFulkerson(int source, int sink) {
+        if (source < 0 || source >= g.numVertices || sink < 0 || sink >= g.numVertices)
+            throw out_of_range("Vértice inválido");
+        vector<vector<T>> residual = g.adjMatrix;
         T maxFlow = 0;
-        while (findAugmentingPath(s, t, parent, residualGraph)) {
+        vector<int> parent(g.numVertices);
+
+        while (true) {
+            fill(parent.begin(), parent.end(), -1);
+            parent[source] = -2;
+
+            if (!dfsFordFulkerson(residual, source, sink, parent)) break;
+
             T pathFlow = numeric_limits<T>::max();
-            for (int v = t; v != s; v = parent[v]) {
+            for (int v = sink; v != source; v = parent[v]) {
                 int u = parent[v];
-                pathFlow = min(pathFlow, residualGraph[u][v]);
+                pathFlow = min(pathFlow, residual[u][v]);
             }
-            for (int v = t; v != s; v = parent[v]) {
+
+            for (int v = sink; v != source; v = parent[v]) {
                 int u = parent[v];
-                residualGraph[u][v] -= pathFlow;
-                residualGraph[v][u] += pathFlow;
+                residual[u][v] -= pathFlow;
+                residual[v][u] += pathFlow;
             }
+
             maxFlow += pathFlow;
+        }
+        return maxFlow;
+    }
+    // Algoritmo de Edmonds-Karp (BFS)
+    T edmondsKarp(int source, int sink) {
+        if (source < 0 || source >= g.numVertices || sink < 0 || sink >= g.numVertices)
+            throw out_of_range("Vértice inválido");
+
+        vector<vector<T>> residual = g.adjMatrix;
+        T maxFlow = 0;
+        vector<int> parent(g.numVertices);
+
+        while (bfsEdmondsKarp(residual, source, sink, parent)) {
+            T pathFlow = numeric_limits<T>::max();
+            for (int v = sink; v != source; v = parent[v]) {
+                int u = parent[v];
+                pathFlow = min(pathFlow, residual[u][v]);
+            }
+
+            for (int v = sink; v != source; v = parent[v]) {
+                int u = parent[v];
+                residual[u][v] -= pathFlow;
+                residual[v][u] += pathFlow;
+            }
+
+            maxFlow += pathFlow;
+        }
+        return maxFlow;
+    }
+    // Algoritmo de Dinic
+    T dinic(int source, int sink) {
+        if (source < 0 || source >= g.numVertices || sink < 0 || sink >= g.numVertices)
+            throw out_of_range("Vértice inválido");
+
+        vector<vector<T>> residual = g.adjMatrix;
+        T maxFlow = 0;
+        vector<int> level(g.numVertices);
+
+        while (bfsLevelGraph(residual, source, sink, level)) {
+            T flow;
+            do {
+                flow = sendFlow(residual, source, sink, numeric_limits<T>::max(), level);
+                maxFlow += flow;
+            } while (flow > 0);
         }
         return maxFlow;
     }
 };
 
-class combinatorics{
+template <typename T>
+class GraphList {
+private:
+    struct Graph {
+        bool isDirected;
+        int numVertices;
+        vector<vector<pair<int, T>>> adjList;
+    };
+    Graph g;
+public:
+    GraphList(int n, bool directed = false) {
+        g.isDirected = directed;
+        g.numVertices = n;
+        g.adjList.resize(n);
+    }
+    void addEdge(int u, int v, T weight = T()) {
+        if (u < 0 || u >= g.numVertices || v < 0 || v >= g.numVertices)
+            throw out_of_range("Vértice inválido");
+        g.adjList[u].emplace_back(v, weight);
+        if (!g.isDirected) 
+            g.adjList[v].emplace_back(u, weight);
+    }
+    void removeEdge(int u, int v) {
+        if (u < 0 || u >= g.numVertices || v < 0 || v >= g.numVertices)
+            throw out_of_range("Vértice inválido");
+        auto& neighborsU = g.adjList[u];
+        neighborsU.erase(
+            remove_if(neighborsU.begin(), neighborsU.end(),
+                           [v](const pair<int, T>& edge) { return edge.first == v; }),
+            neighborsU.end()
+        );
+        if (!g.isDirected) {
+            auto& neighborsV = g.adjList[v];
+            neighborsV.erase(
+                remove_if(neighborsV.begin(), neighborsV.end(),
+                               [u](const pair<int, T>& edge) { return edge.first == u; }),
+                neighborsV.end()
+            );
+        }
+    }
+    bool hasEdge(int u, int v) const {
+        if (u < 0 || u >= g.numVertices || v < 0 || v >= g.numVertices)
+            throw out_of_range("Vértice inválido");
+        for (const auto& edge : g.adjList[u]) {
+            if (edge.first == v)
+                return true;
+        }
+        return false;
+    }
+    const vector<pair<int, T>>& getNeighbors(int u) const {
+        if (u < 0 || u >= g.numVertices)
+            throw out_of_range("Vértice inválido");
+        return g.adjList[u];
+    }
+    void printList() const {
+        for (int u = 0; u < g.numVertices; ++u) {
+            cout << u << ": ";
+            for (const auto& edge : g.adjList[u]) {
+                cout << "(" << edge.first << ", " << edge.second << ") ";
+            }
+            cout << "\n";
+        }
+    }
+    // Outras funções úteis:
+    int getNumVertices() const { return g.numVertices; }
+    bool isDirected() const { return g.isDirected; }
+    // BFS a partir de um vértice inicial
+    vector<int> BFS(int startVertex) const {
+        if (startVertex < 0 || startVertex >= g.numVertices) {
+            throw out_of_range("Vértice inicial inválido");
+        }
+        vector<bool> visited(g.numVertices, false);
+        vector<int> traversalOrder;
+        queue<int> q;
+        visited[startVertex] = true;
+        q.push(startVertex);
+        while (!q.empty()) {
+            int current = q.front();
+            q.pop();
+            traversalOrder.push_back(current);
+            // Visita todos os vizinhos do vértice atual
+            for (const auto& edge : g.adjList[current]) {
+                int neighbor = edge.first;
+                if (!visited[neighbor]) {
+                    visited[neighbor] = true;
+                    q.push(neighbor);
+                }
+            }
+        }
+        return traversalOrder;
+    }
+    // DFS Iterativo a partir de um vértice inicial
+    vector<int> DFS(int startVertex) const {
+        if (startVertex < 0 || startVertex >= g.numVertices) {
+            throw out_of_range("Vértice inicial inválido");
+        }
+        vector<bool> visited(g.numVertices, false);
+        vector<int> traversalOrder;
+        stack<int> s;
+        s.push(startVertex);
+        visited[startVertex] = true;
+        while (!s.empty()) {
+            int current = s.top();
+            s.pop();
+            traversalOrder.push_back(current);
+            // Empilha os vizinhos em ordem inversa para manter a ordem correta
+            for (auto it = g.adjList[current].rbegin(); it != g.adjList[current].rend(); ++it) {
+                int neighbor = it->first;
+                if (!visited[neighbor]) {
+                    visited[neighbor] = true;
+                    s.push(neighbor);
+                }
+            }
+        }
+        return traversalOrder;
+    }
+    //#######################
+    //####################### SEGUNDA ENTREGA GRAFOS::
+    //#######################
+    private:
+    struct ResidualEdge {
+        int to;
+        T capacity;
+        int rev; // Índice da aresta reversa no vetor de adjacência do nó 'to'
+        ResidualEdge(int to, T capacity, int rev) : to(to), capacity(capacity), rev(rev) {}
+    };
 
+    bool bfsEdmondsKarp(const vector<vector<ResidualEdge>>& residual, int source, int sink, vector<int>& parent) const {
+        fill(parent.begin(), parent.end(), -1);
+        queue<int> q;
+        q.push(source);
+        parent[source] = -2;
+
+        while (!q.empty()) {
+            int u = q.front();
+            q.pop();
+            for (const ResidualEdge& e : residual[u]) {
+                if (parent[e.to] == -1 && e.capacity > 0) {
+                    parent[e.to] = u;
+                    if (e.to == sink) return true;
+                    q.push(e.to);
+                }
+            }
+        }
+        return false;
+    }
+
+    bool dfsFordFulkerson(vector<vector<ResidualEdge>>& residual, int u, int sink, vector<bool>& visited) {
+        if (u == sink) return true;
+        visited[u] = true;
+
+        for (ResidualEdge& e : residual[u]) {
+            if (!visited[e.to] && e.capacity > 0) {
+                if (dfsFordFulkerson(residual, e.to, sink, visited)) {
+                    e.capacity -= 1; 
+                    residual[e.to][e.rev].capacity += 1;
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    bool bfsLevelGraph(const vector<vector<ResidualEdge>>& residual, int source, int sink, vector<int>& level) const {
+        fill(level.begin(), level.end(), -1);
+        queue<int> q;
+        q.push(source);
+        level[source] = 0;
+
+        while (!q.empty()) {
+            int u = q.front();
+            q.pop();
+
+            for (const ResidualEdge& e : residual[u]) {
+                if (level[e.to] == -1 && e.capacity > 0) {
+                    level[e.to] = level[u] + 1;
+                    q.push(e.to);
+                }
+            }
+        }
+        return level[sink] != -1;
+    }
+
+    T sendFlow(vector<vector<ResidualEdge>>& residual, int u, int sink, T flow, vector<int>& level) {
+        if (u == sink) return flow;
+
+        for (ResidualEdge& e : residual[u]) {
+            if (e.capacity > 0 && level[e.to] == level[u] + 1) {
+                T currentFlow = min(flow, e.capacity);
+                T tempFlow = sendFlow(residual, e.to, sink, currentFlow, level);
+
+                if (tempFlow > 0) {
+                    e.capacity -= tempFlow;
+                    residual[e.to][e.rev].capacity += tempFlow;
+                    return tempFlow;
+                }
+            }
+        }
+        return 0;
+    }
+    public:
+    T fordFulkerson(int source, int sink) {
+        if (source < 0 || source >= g.numVertices || sink < 0 || sink >= g.numVertices)
+            throw out_of_range("Vértice inválido");
+
+        // Inicializa o grafo residual
+        vector<vector<ResidualEdge>> residual(g.numVertices);
+        for (int u = 0; u < g.numVertices; ++u) {
+            for (const auto& edge : g.adjList[u]) {
+                int v = edge.first;
+                T cap = edge.second;
+                residual[u].emplace_back(v, cap, residual[v].size());
+                residual[v].emplace_back(u, 0, residual[u].size() - 1);
+            }
+        }
+
+        T maxFlow = 0;
+        vector<bool> visited(g.numVertices);
+
+        while (dfsFordFulkerson(residual, source, sink, visited)) {
+            fill(visited.begin(), visited.end(), false);
+            maxFlow += 1; // Ajuste para exemplo (fluxo unitário)
+        }
+        return maxFlow;
+    }
+
+    // Algoritmo de Edmonds-Karp (BFS)
+    T edmondsKarp(int source, int sink) {
+        if (source < 0 || source >= g.numVertices || sink < 0 || sink >= g.numVertices)
+            throw out_of_range("Vértice inválido");
+
+        vector<vector<ResidualEdge>> residual(g.numVertices);
+        for (int u = 0; u < g.numVertices; ++u) {
+            for (const auto& edge : g.adjList[u]) {
+                int v = edge.first;
+                T cap = edge.second;
+                residual[u].emplace_back(v, cap, residual[v].size());
+                residual[v].emplace_back(u, 0, residual[u].size() - 1);
+            }
+        }
+
+        T maxFlow = 0;
+        vector<int> parent(g.numVertices);
+
+        while (bfsEdmondsKarp(residual, source, sink, parent)) {
+            T pathFlow = numeric_limits<T>::max();
+            for (int v = sink; v != source; v = parent[v]) {
+                int u = parent[v];
+                for (ResidualEdge& e : residual[u]) {
+                    if (e.to == v) {
+                        pathFlow = min(pathFlow, e.capacity);
+                        break;
+                    }
+                }
+            }
+
+            for (int v = sink; v != source; v = parent[v]) {
+                int u = parent[v];
+                for (ResidualEdge& e : residual[u]) {
+                    if (e.to == v) {
+                        e.capacity -= pathFlow;
+                        residual[v][e.rev].capacity += pathFlow;
+                        break;
+                    }
+                }
+            }
+
+            maxFlow += pathFlow;
+        }
+        return maxFlow;
+    }
+
+    // Algoritmo de Dinic
+    T dinic(int source, int sink) {
+        if (source < 0 || source >= g.numVertices || sink < 0 || sink >= g.numVertices)
+            throw out_of_range("Vértice inválido");
+
+        vector<vector<ResidualEdge>> residual(g.numVertices);
+        for (int u = 0; u < g.numVertices; ++u) {
+            for (const auto& edge : g.adjList[u]) {
+                int v = edge.first;
+                T cap = edge.second;
+                residual[u].emplace_back(v, cap, residual[v].size());
+                residual[v].emplace_back(u, 0, residual[u].size() - 1);
+            }
+        }
+
+        T maxFlow = 0;
+        vector<int> level(g.numVertices);
+
+        while (bfsLevelGraph(residual, source, sink, level)) {
+            T flow;
+            do {
+                flow = sendFlow(residual, source, sink, numeric_limits<T>::max(), level);
+                maxFlow += flow;
+            } while (flow > 0);
+        }
+        return maxFlow;
+    }
 };
 
-class numeric_theory{
+/* ################# Parte da Segunda Entrega ################# */
+class Combinatorics {
+    private:
+    // Memoização: cache de resultados
+    static vector<vector<ll>> memo;
 
+    static ll binomialRecursiveMemo(int n, int k) {
+        if (k == 0 || k == n) return 1;
+        if (memo[n][k] != -1) return memo[n][k];
+
+        memo[n][k] = binomialRecursiveMemo(n - 1, k - 1) + binomialRecursiveMemo(n - 1, k);
+        return memo[n][k];
+    }
+
+public:
+    static ll binomialCoefficientRecursive(int n, int k) {
+        if (k < 0 || k > n) return 0;
+        // Inicializa a tabela de memoização
+        memo.resize(n + 1, vector<ll>(k + 1, -1));
+        return binomialRecursiveMemo(n, k);
+    }
+
+    static ll binomialCoefficientAnalytic(int n, int k) {
+        if (k < 0 || k > n) return 0; // Casos inválidos
+        if (k == 0 || k == n) return 1; // Casos base
+        // Usa a propriedade C(n, k) = C(n, n - k) para otimizar
+        k = min(k, n - k);
+        ll result = 1;
+        for (int i = 1; i <= k; ++i) {
+            result = result * (n - k + i) / i;
+        }
+        return result;
+    }
+};
+
+template <typename T>
+class NumberTheory {
+    private:
+    static T extendedEuclid(T a, T b, T& x, T& y) {
+        if (b == 0) {
+            x = 1;
+            y = 0;
+            return a;
+        }
+        T gcd = extendedEuclid(b, a % b, x, y);
+        T temp = x;
+        x = y;
+        y = temp - (a / b) * y;
+        return gcd;
+    }
+    
+    public:
+    static bool isPrimeBruteForce(T n) {
+        if (n <= 1) return false;
+        if (n == 2) return true;
+        if (n % 2 == 0) return false;
+
+        for (T i = 3; i < n; i += 2) {
+            if (n % i == 0) return false;
+        }
+        return true;
+    }
+
+    static bool isPrimeOptimized(T n) {
+        if (n <= 1) return false;
+        if (n <= 3) return true; // 2 e 3 são primos
+        if (n % 2 == 0 || n % 3 == 0) return false;
+
+        // Verifica divisibilidade até sqrt(n), pulando múltiplos de 2 e 3
+        for (T i = 5; i * i <= n; i += 6) {
+            if (n % i == 0 || n % (i + 2) == 0) return false;
+        }
+        return true;
+    }
+
+    // Inverso modular (retorna -1 se não existir)
+    static T modularInverse(T a, T m) {
+        if (m <= 0) throw std::invalid_argument("m deve ser positivo");
+
+        T x, y;
+        T gcd = extendedEuclid(a, m, x, y);
+
+        if (gcd != 1) {
+            throw std::invalid_argument("a e m não são coprimos");
+        }
+
+        // Ajusta x para o intervalo [0, m-1]
+        x = (x % m + m) % m;
+        return x;
+    }
 };
